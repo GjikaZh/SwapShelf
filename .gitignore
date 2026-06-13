@@ -1,0 +1,15 @@
+.vs/
+bin/
+obj/
+**/bin/
+**/obj/
+*.user
+*.suo
+TestResults/
+coveragereport/
+node_modules/
+
+appsettings.json
+appsettings.Development.json
+**/appsettings.json
+**/appsettings.Development.json
