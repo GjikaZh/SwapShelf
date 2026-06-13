@@ -9,12 +9,12 @@ namespace SwapShelf.Tests.Controllers
 {
     public class ListingsControllerTests
     {
-        private readonly Mock<IListingService> _listingServiceMock = new();
+        private readonly IListingService _listingServiceMock = Substitute.For<IListingService>();
         private readonly ListingsController _controller;
 
         public ListingsControllerTests()
         {
-            _controller = new ListingsController(_listingServiceMock.Object);
+            _controller = new ListingsController(_listingServiceMock);
         }
 
         [Fact]
@@ -25,8 +25,8 @@ namespace SwapShelf.Tests.Controllers
                 new ListingResponse { Id = 1, UserId = 1 }
             };
             _listingServiceMock
-                .Setup(s => s.GetByUserAsync(1))
-                .ReturnsAsync(listings);
+                .GetByUserAsync(1)
+                .Returns(listings);
 
             ControllerTestHelper.SetUser(_controller, userId: 1);
 
@@ -44,8 +44,8 @@ namespace SwapShelf.Tests.Controllers
                 new ListingResponse { Id = 1, UserId = 1 }
             };
             _listingServiceMock
-                .Setup(s => s.GetAllAsync(null, null, null, null))
-                .ReturnsAsync(listings);
+                .GetAllAsync(null, null, null, null)
+                .Returns(listings);
 
             var result = await _controller.GetAll(null, null, null, null) as OkObjectResult;
 
@@ -58,8 +58,8 @@ namespace SwapShelf.Tests.Controllers
         {
             var listing = new ListingResponse { Id = 1, UserId = 1 };
             _listingServiceMock
-                .Setup(s => s.GetByIdAsync(1))
-                .ReturnsAsync(listing);
+                .GetByIdAsync(1)
+                .Returns(listing);
 
             var result = await _controller.GetById(1) as OkObjectResult;
 
@@ -71,8 +71,8 @@ namespace SwapShelf.Tests.Controllers
         public async Task GetById_NotFound_Returns404()
         {
             _listingServiceMock
-                .Setup(s => s.GetByIdAsync(99))
-                .ThrowsAsync(new KeyNotFoundException("Listing 99 not found."));
+                .GetByIdAsync(99)
+                .Throws(new KeyNotFoundException("Listing 99 not found."));
 
             var result = await _controller.GetById(99) as NotFoundObjectResult;
 
@@ -87,8 +87,8 @@ namespace SwapShelf.Tests.Controllers
             var created = new ListingResponse { Id = 1, UserId = 1 };
 
             _listingServiceMock
-                .Setup(s => s.CreateAsync(1, request))
-                .ReturnsAsync(created);
+                .CreateAsync(1, request)
+                .Returns(created);
 
             ControllerTestHelper.SetUser(_controller, userId: 1);
 
@@ -104,8 +104,8 @@ namespace SwapShelf.Tests.Controllers
             var request = new ListingRequest { BookId = 99, Condition = ListingCondition.Good, Location = "NYC" };
 
             _listingServiceMock
-                .Setup(s => s.CreateAsync(1, request))
-                .ThrowsAsync(new KeyNotFoundException("Book 99 not found."));
+                .CreateAsync(1, request)
+                .Throws(new KeyNotFoundException("Book 99 not found."));
 
             ControllerTestHelper.SetUser(_controller, userId: 1);
 
@@ -122,8 +122,8 @@ namespace SwapShelf.Tests.Controllers
             var updated = new ListingResponse { Id = 1, UserId = 1 };
 
             _listingServiceMock
-                .Setup(s => s.UpdateAsync(1, 1, request))
-                .ReturnsAsync(updated);
+                .UpdateAsync(1, 1, request)
+                .Returns(updated);
 
             ControllerTestHelper.SetUser(_controller, userId: 1);
 
@@ -139,8 +139,8 @@ namespace SwapShelf.Tests.Controllers
             var request = new ListingRequest { BookId = 1, Condition = ListingCondition.Good, Location = "NYC" };
 
             _listingServiceMock
-                .Setup(s => s.UpdateAsync(2, 1, request))
-                .ThrowsAsync(new UnauthorizedAccessException("Not the owner."));
+                .UpdateAsync(2, 1, request)
+                .Throws(new UnauthorizedAccessException("Not the owner."));
 
             ControllerTestHelper.SetUser(_controller, userId: 2);
 
@@ -155,8 +155,8 @@ namespace SwapShelf.Tests.Controllers
             var request = new ListingRequest { BookId = 1, Condition = ListingCondition.Good, Location = "NYC" };
 
             _listingServiceMock
-                .Setup(s => s.UpdateAsync(1, 1, request))
-                .ThrowsAsync(new InvalidOperationException("Listing is locked."));
+                .UpdateAsync(1, 1, request)
+                .Throws(new InvalidOperationException("Listing is locked."));
 
             ControllerTestHelper.SetUser(_controller, userId: 1);
 
@@ -170,7 +170,7 @@ namespace SwapShelf.Tests.Controllers
         public async Task Delete_Valid_Returns204()
         {
             _listingServiceMock
-                .Setup(s => s.DeleteAsync(1, 1))
+                .DeleteAsync(1, 1)
                 .Returns(Task.CompletedTask);
 
             ControllerTestHelper.SetUser(_controller, userId: 1);
@@ -185,8 +185,8 @@ namespace SwapShelf.Tests.Controllers
         public async Task Delete_NotFound_Returns404()
         {
             _listingServiceMock
-                .Setup(s => s.DeleteAsync(1, 99))
-                .ThrowsAsync(new KeyNotFoundException("Listing 99 not found."));
+                .DeleteAsync(1, 99)
+                .Throws(new KeyNotFoundException("Listing 99 not found."));
 
             ControllerTestHelper.SetUser(_controller, userId: 1);
 
@@ -200,8 +200,8 @@ namespace SwapShelf.Tests.Controllers
         public async Task Delete_NotOwner_ReturnsForbid()
         {
             _listingServiceMock
-                .Setup(s => s.DeleteAsync(2, 1))
-                .ThrowsAsync(new UnauthorizedAccessException("Not the owner."));
+                .DeleteAsync(2, 1)
+                .Throws(new UnauthorizedAccessException("Not the owner."));
 
             ControllerTestHelper.SetUser(_controller, userId: 2);
 
@@ -214,8 +214,8 @@ namespace SwapShelf.Tests.Controllers
         public async Task Delete_LockedListing_Returns400()
         {
             _listingServiceMock
-                .Setup(s => s.DeleteAsync(1, 1))
-                .ThrowsAsync(new InvalidOperationException("Listing is locked."));
+                .DeleteAsync(1, 1)
+                .Throws(new InvalidOperationException("Listing is locked."));
 
             ControllerTestHelper.SetUser(_controller, userId: 1);
 

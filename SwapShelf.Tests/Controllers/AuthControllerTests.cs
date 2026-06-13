@@ -8,12 +8,12 @@ namespace SwapShelf.Tests.Controllers
 {
     public class AuthControllerTests
     {
-        private readonly Mock<IAuthService> _authServiceMock = new();
+        private readonly IAuthService _authServiceMock = Substitute.For<IAuthService>();
         private readonly AuthController _controller;
 
         public AuthControllerTests()
         {
-            _controller = new AuthController(_authServiceMock.Object);
+            _controller = new AuthController(_authServiceMock);
         }
 
         [Fact]
@@ -27,8 +27,8 @@ namespace SwapShelf.Tests.Controllers
                 Role = "User"
             };
             _authServiceMock
-                .Setup(s => s.RegisterAsync(It.IsAny<RegisterRequest>()))
-                .ReturnsAsync(authResponse);
+                .RegisterAsync(Arg.Any<RegisterRequest>())
+                .Returns(authResponse);
 
             var result = await _controller.Register(new RegisterRequest
             {
@@ -45,8 +45,8 @@ namespace SwapShelf.Tests.Controllers
         public async Task Register_DuplicateEmail_Returns400()
         {
             _authServiceMock
-                .Setup(s => s.RegisterAsync(It.IsAny<RegisterRequest>()))
-                .ThrowsAsync(new InvalidOperationException("Email taken"));
+                .RegisterAsync(Arg.Any<RegisterRequest>())
+                .Throws(new InvalidOperationException("Email taken"));
 
             var result = await _controller.Register(new RegisterRequest
             {
@@ -70,8 +70,8 @@ namespace SwapShelf.Tests.Controllers
                 Role = "User"
             };
             _authServiceMock
-                .Setup(s => s.LoginAsync(It.IsAny<LoginRequest>()))
-                .ReturnsAsync(authResponse);
+                .LoginAsync(Arg.Any<LoginRequest>())
+                .Returns(authResponse);
 
             var result = await _controller.Login(new LoginRequest
             {
@@ -87,8 +87,8 @@ namespace SwapShelf.Tests.Controllers
         public async Task Login_WrongCredentials_Returns401()
         {
             _authServiceMock
-                .Setup(s => s.LoginAsync(It.IsAny<LoginRequest>()))
-                .ThrowsAsync(new UnauthorizedAccessException("Invalid credentials"));
+                .LoginAsync(Arg.Any<LoginRequest>())
+                .Throws(new UnauthorizedAccessException("Invalid credentials"));
 
             var result = await _controller.Login(new LoginRequest
             {

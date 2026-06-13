@@ -8,13 +8,13 @@ namespace SwapShelf.Tests.Controllers
 {
     public class MatchesControllerTests
     {
-        private readonly Mock<IMatchingService> _mockMatchingService;
+        private readonly IMatchingService _mockMatchingService;
         private readonly MatchesController _controller;
 
         public MatchesControllerTests()
         {
-            _mockMatchingService = new Mock<IMatchingService>();
-            _controller = new MatchesController(_mockMatchingService.Object);
+            _mockMatchingService = Substitute.For<IMatchingService>();
+            _controller = new MatchesController(_mockMatchingService);
             ControllerTestHelper.SetUser(_controller, 1);
         }
 
@@ -26,7 +26,7 @@ namespace SwapShelf.Tests.Controllers
                 new MatchResponse { TheirUserId = 2, TheirUserName = "Bob", TheirTrustScore = 4.5 },
                 new MatchResponse { TheirUserId = 3, TheirUserName = "Carol", TheirTrustScore = 3.8 }
             };
-            _mockMatchingService.Setup(s => s.GetMatchesAsync(1)).ReturnsAsync(matches);
+            _mockMatchingService.GetMatchesAsync(1).Returns(matches);
 
             var result = await _controller.GetMatches() as OkObjectResult;
 
@@ -41,7 +41,7 @@ namespace SwapShelf.Tests.Controllers
         public async Task GetMatches_NoMatches_ReturnsEmptyOk()
         {
             var emptyMatches = new List<MatchResponse>();
-            _mockMatchingService.Setup(s => s.GetMatchesAsync(1)).ReturnsAsync(emptyMatches);
+            _mockMatchingService.GetMatchesAsync(1).Returns(emptyMatches);
 
             var result = await _controller.GetMatches() as OkObjectResult;
 

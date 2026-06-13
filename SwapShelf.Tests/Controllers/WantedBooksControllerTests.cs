@@ -8,7 +8,7 @@ namespace SwapShelf.Tests.Controllers
 {
     public class WantedBooksControllerTests
     {
-        private readonly Mock<IWantedBookService> _mockWantedBookService;
+        private readonly IWantedBookService _mockWantedBookService;
         private readonly WantedBooksController _controller;
 
         private static readonly WantedBookResponse _stubWanted = new WantedBookResponse
@@ -25,8 +25,8 @@ namespace SwapShelf.Tests.Controllers
 
         public WantedBooksControllerTests()
         {
-            _mockWantedBookService = new Mock<IWantedBookService>();
-            _controller = new WantedBooksController(_mockWantedBookService.Object);
+            _mockWantedBookService = Substitute.For<IWantedBookService>();
+            _controller = new WantedBooksController(_mockWantedBookService);
             ControllerTestHelper.SetUser(_controller, 1);
         }
 
@@ -34,7 +34,7 @@ namespace SwapShelf.Tests.Controllers
         public async Task GetMyWanted_ReturnsOk()
         {
             var wanted = new List<WantedBookResponse> { _stubWanted };
-            _mockWantedBookService.Setup(s => s.GetByUserAsync(1)).ReturnsAsync(wanted);
+            _mockWantedBookService.GetByUserAsync(1).Returns(wanted);
 
             var result = await _controller.GetMyWanted() as OkObjectResult;
 
@@ -45,7 +45,7 @@ namespace SwapShelf.Tests.Controllers
         [Fact]
         public async Task Add_ValidRequest_Returns201()
         {
-            _mockWantedBookService.Setup(s => s.AddAsync(1, _stubRequest)).ReturnsAsync(_stubWanted);
+            _mockWantedBookService.AddAsync(1, _stubRequest).Returns(_stubWanted);
 
             var result = await _controller.Add(_stubRequest) as CreatedAtActionResult;
 
@@ -56,8 +56,8 @@ namespace SwapShelf.Tests.Controllers
         [Fact]
         public async Task Add_BookNotFound_Returns404()
         {
-            _mockWantedBookService.Setup(s => s.AddAsync(1, _stubRequest))
-                .ThrowsAsync(new KeyNotFoundException("Book not found"));
+            _mockWantedBookService.AddAsync(1, _stubRequest)
+                .Throws(new KeyNotFoundException("Book not found"));
 
             var result = await _controller.Add(_stubRequest) as NotFoundObjectResult;
 
@@ -68,8 +68,8 @@ namespace SwapShelf.Tests.Controllers
         [Fact]
         public async Task Add_AlreadyOnList_Returns400()
         {
-            _mockWantedBookService.Setup(s => s.AddAsync(1, _stubRequest))
-                .ThrowsAsync(new InvalidOperationException("Book is already on wanted list"));
+            _mockWantedBookService.AddAsync(1, _stubRequest)
+                .Throws(new InvalidOperationException("Book is already on wanted list"));
 
             var result = await _controller.Add(_stubRequest) as BadRequestObjectResult;
 
@@ -80,7 +80,7 @@ namespace SwapShelf.Tests.Controllers
         [Fact]
         public async Task Remove_Valid_Returns204()
         {
-            _mockWantedBookService.Setup(s => s.RemoveAsync(1, 1)).Returns(Task.CompletedTask);
+            _mockWantedBookService.RemoveAsync(1, 1).Returns(Task.CompletedTask);
 
             var result = await _controller.Remove(1) as NoContentResult;
 
@@ -91,8 +91,8 @@ namespace SwapShelf.Tests.Controllers
         [Fact]
         public async Task Remove_NotFound_Returns404()
         {
-            _mockWantedBookService.Setup(s => s.RemoveAsync(1, 99))
-                .ThrowsAsync(new KeyNotFoundException("Wanted book not found"));
+            _mockWantedBookService.RemoveAsync(1, 99)
+                .Throws(new KeyNotFoundException("Wanted book not found"));
 
             var result = await _controller.Remove(99) as NotFoundObjectResult;
 
@@ -103,8 +103,8 @@ namespace SwapShelf.Tests.Controllers
         [Fact]
         public async Task Remove_NotOwner_ReturnsForbid()
         {
-            _mockWantedBookService.Setup(s => s.RemoveAsync(1, 1))
-                .ThrowsAsync(new UnauthorizedAccessException());
+            _mockWantedBookService.RemoveAsync(1, 1)
+                .Throws(new UnauthorizedAccessException());
 
             var result = await _controller.Remove(1) as ForbidResult;
 

@@ -8,7 +8,7 @@ namespace SwapShelf.Tests.Controllers
 {
     public class ReviewsControllerTests
     {
-        private readonly Mock<IReviewService> _mockReviewService;
+        private readonly IReviewService _mockReviewService;
         private readonly ReviewsController _controller;
 
         private static readonly ReviewResponse _stubReview = new ReviewResponse
@@ -34,15 +34,15 @@ namespace SwapShelf.Tests.Controllers
 
         public ReviewsControllerTests()
         {
-            _mockReviewService = new Mock<IReviewService>();
-            _controller = new ReviewsController(_mockReviewService.Object);
+            _mockReviewService = Substitute.For<IReviewService>();
+            _controller = new ReviewsController(_mockReviewService);
         }
 
         [Fact]
         public async Task GetByUser_ReturnsOk()
         {
             var reviews = new List<ReviewResponse> { _stubReview };
-            _mockReviewService.Setup(s => s.GetByUserAsync(2)).ReturnsAsync(reviews);
+            _mockReviewService.GetByUserAsync(2).Returns(reviews);
 
             var result = await _controller.GetByUser(2) as OkObjectResult;
 
@@ -54,7 +54,7 @@ namespace SwapShelf.Tests.Controllers
         public async Task Create_ValidRequest_Returns201()
         {
             ControllerTestHelper.SetUser(_controller, 1);
-            _mockReviewService.Setup(s => s.CreateAsync(1, _stubRequest)).ReturnsAsync(_stubReview);
+            _mockReviewService.CreateAsync(1, _stubRequest).Returns(_stubReview);
 
             var result = await _controller.Create(_stubRequest) as CreatedAtActionResult;
 
@@ -66,8 +66,8 @@ namespace SwapShelf.Tests.Controllers
         public async Task Create_SwapNotFound_Returns404()
         {
             ControllerTestHelper.SetUser(_controller, 1);
-            _mockReviewService.Setup(s => s.CreateAsync(1, _stubRequest))
-                .ThrowsAsync(new KeyNotFoundException("Swap not found"));
+            _mockReviewService.CreateAsync(1, _stubRequest)
+                .Throws(new KeyNotFoundException("Swap not found"));
 
             var result = await _controller.Create(_stubRequest) as NotFoundObjectResult;
 
@@ -79,8 +79,8 @@ namespace SwapShelf.Tests.Controllers
         public async Task Create_NotParticipant_ReturnsForbid()
         {
             ControllerTestHelper.SetUser(_controller, 1);
-            _mockReviewService.Setup(s => s.CreateAsync(1, _stubRequest))
-                .ThrowsAsync(new UnauthorizedAccessException());
+            _mockReviewService.CreateAsync(1, _stubRequest)
+                .Throws(new UnauthorizedAccessException());
 
             var result = await _controller.Create(_stubRequest) as ForbidResult;
 
@@ -91,8 +91,8 @@ namespace SwapShelf.Tests.Controllers
         public async Task Create_InvalidRating_Returns400()
         {
             ControllerTestHelper.SetUser(_controller, 1);
-            _mockReviewService.Setup(s => s.CreateAsync(1, _stubRequest))
-                .ThrowsAsync(new InvalidOperationException("Rating must be between 1 and 5"));
+            _mockReviewService.CreateAsync(1, _stubRequest)
+                .Throws(new InvalidOperationException("Rating must be between 1 and 5"));
 
             var result = await _controller.Create(_stubRequest) as BadRequestObjectResult;
 
