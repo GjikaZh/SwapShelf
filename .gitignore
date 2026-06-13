@@ -13,3 +13,8 @@ appsettings.json
 appsettings.Development.json
 **/appsettings.json
 **/appsettings.Development.json
+
+# Frontend env files (keep .env.example, ignore real ones)
+swapshelf-ui/.env
+swapshelf-ui/.env.local
+swapshelf-ui/.env.production

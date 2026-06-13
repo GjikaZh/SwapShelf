@@ -10,6 +10,16 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// CORS — allow the Vercel frontend (set ALLOWED_ORIGIN env var on Render)
+var allowedOrigin = builder.Configuration["AllowedOrigin"] ?? "http://localhost:5173";
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("Frontend", policy =>
+        policy.WithOrigins(allowedOrigin)
+              .AllowAnyHeader()
+              .AllowAnyMethod());
+});
+
 builder.Services.AddControllers()
 	.ConfigureApiBehaviorOptions(options =>
 	{
@@ -107,7 +117,7 @@ if (app.Environment.IsDevelopment())
 	app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+app.UseCors("Frontend");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
