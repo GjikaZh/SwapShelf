@@ -331,3 +331,337 @@ Users can register, login, create listings, add wanted books, find matches, requ
 The deployed frontend application is available here:
 
 https://swap-shelf-ruby.vercel.app/
+
+# Performance Testing with k6
+
+This folder contains performance tests for the SwapShelf backend API. The tests were created using **k6**, a performance testing tool used to simulate multiple virtual users and measure how the system behaves under load.
+
+## Test Environment
+
+The tests were executed against the local backend API:
+
+```text
+https://localhost:7208/api
+```
+
+The backend was run locally through Visual Studio, and k6 was executed from the terminal. The frontend UI was not required for these tests because k6 tests the backend API directly.
+
+Since the tests were executed locally, the results are not affected by Render free-tier cold starts, network delays, or deployment limitations.
+
+## Tool Used
+
+```text
+k6
+```
+
+k6 was used to measure:
+
+```text
+response time
+failed requests
+successful checks
+number of virtual users
+request throughput
+system stability under load
+```
+
+## Test Files
+
+### 1. Books Load Test
+
+File:
+
+```text
+books-load-test.js
+```
+
+Purpose:
+
+This test checks the performance of the books endpoint under normal load.
+
+Endpoint tested:
+
+```http
+GET /api/books
+```
+
+Configuration:
+
+```text
+10 virtual users
+30 seconds
+```
+
+Result summary:
+
+```text
+300 requests
+0 failed requests
+100% checks passed
+Average response time: 28.18ms
+p95 response time: 41.2ms
+```
+
+Conclusion:
+
+The books endpoint performed successfully under normal concurrent load.
+
+---
+
+### 2. Listings Load Test
+
+File:
+
+```text
+listings-load-test.js
+```
+
+Purpose:
+
+This test checks the performance of the listings endpoint, which is one of the main user-facing endpoints in the application.
+
+Endpoint tested:
+
+```http
+GET /api/listings
+```
+
+Configuration:
+
+```text
+20 virtual users
+30 seconds
+```
+
+Result summary:
+
+```text
+580 requests
+0 failed requests
+100% checks passed
+Average response time: 38.91ms
+p95 response time: 123.34ms
+```
+
+Conclusion:
+
+The listings endpoint remained stable and responsive under medium concurrent load.
+
+---
+
+### 3. Browse Scenario Test
+
+File:
+
+```text
+browse-scenario-test.js
+```
+
+Purpose:
+
+This test simulates a realistic user browsing flow by calling multiple public endpoints.
+
+Endpoints tested:
+
+```http
+GET /api/books
+GET /api/listings
+```
+
+Configuration:
+
+```text
+15 virtual users
+45 seconds
+```
+
+Result summary:
+
+```text
+678 HTTP requests
+0 failed requests
+100% checks passed
+Average response time: 20.91ms
+p95 response time: 51.63ms
+```
+
+Conclusion:
+
+The public browsing flow remained stable and responsive under concurrent user activity.
+
+---
+
+### 4. Stress Test
+
+File:
+
+```text
+stress-test.js
+```
+
+Purpose:
+
+This test gradually increases the number of users to check how the system behaves under heavier load.
+
+Endpoint tested:
+
+```http
+GET /api/listings
+```
+
+Configuration:
+
+```text
+10 virtual users
+25 virtual users
+50 virtual users
+then ramp down to 0
+```
+
+Result summary:
+
+```text
+1696 requests
+0 failed requests
+100% checks passed
+Average response time: 10.56ms
+p95 response time: 22.29ms
+```
+
+Conclusion:
+
+The tested endpoint remained stable under increased concurrent load up to 50 virtual users.
+
+---
+
+### 5. Authentication/Register Performance Test
+
+File:
+
+```text
+auth-performance-test.js
+```
+
+Purpose:
+
+This test checks the performance of a POST/write operation by registering multiple users with unique email addresses.
+
+Endpoint tested:
+
+```http
+POST /api/auth/register
+```
+
+Configuration:
+
+```text
+5 virtual users
+30 seconds
+```
+
+Result summary:
+
+```text
+130 registration requests
+0 failed requests
+100% checks passed
+Average response time: 175.76ms
+p95 response time: 178.1ms
+```
+
+Conclusion:
+
+The registration endpoint successfully handled concurrent write requests within the expected response time.
+
+---
+
+### 6. Breakpoint Test
+
+File:
+
+```text
+breakpoint-test.js
+```
+
+Purpose:
+
+This test was created to find the approximate edge point where the system starts failing or becoming too slow.
+
+Endpoint tested:
+
+```http
+GET /api/listings
+```
+
+Configuration:
+
+```text
+Gradually increased load up to 200 virtual users
+```
+
+Breaking condition:
+
+```text
+Failed HTTP requests
+or response time above 2000ms
+```
+
+Result summary:
+
+```text
+11,829 requests
+0 failed requests
+100% checks passed
+Average response time: 19.28ms
+p95 response time: 49.34ms
+Maximum response time: 190.93ms
+```
+
+Conclusion:
+
+The system did not reach the breaking point during the test. Under the local testing environment, the tested endpoint remained stable up to 200 virtual users.
+
+## How to Run the Tests
+
+First, make sure the backend API is running locally:
+
+```text
+https://localhost:7208/swagger/index.html
+```
+
+Then open a terminal inside the `performance-tests` folder.
+
+Run each test using:
+
+```powershell
+k6 run --insecure-skip-tls-verify .\books-load-test.js
+```
+
+```powershell
+k6 run --insecure-skip-tls-verify .\listings-load-test.js
+```
+
+```powershell
+k6 run --insecure-skip-tls-verify .\browse-scenario-test.js
+```
+
+```powershell
+k6 run --insecure-skip-tls-verify .\stress-test.js
+```
+
+```powershell
+k6 run --insecure-skip-tls-verify .\auth-performance-test.js
+```
+
+```powershell
+k6 run --insecure-skip-tls-verify .\breakpoint-test.js
+```
+
+The `--insecure-skip-tls-verify` option is used because the tests run against a local HTTPS development certificate.
+
+## Overall Conclusion
+
+The performance testing results show that the SwapShelf backend API remained stable under the selected local test conditions. The tested endpoints handled normal load, medium load, realistic browsing flow, stress load, authentication requests, and breakpoint testing without failed requests.
+
+The breakpoint test attempted to find the system limit by increasing the load up to 200 virtual users. No breaking point was reached, since all requests succeeded and response times stayed below the defined threshold. This indicates that the tested backend endpoints performed efficiently in the local environment.
+
