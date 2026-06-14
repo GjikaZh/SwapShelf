@@ -110,6 +110,11 @@ builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddScoped<IMatchingService, MatchingService>();
 
 var app = builder.Build();
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    dbContext.Database.Migrate();
+}
 
 if (app.Environment.IsDevelopment())
 {

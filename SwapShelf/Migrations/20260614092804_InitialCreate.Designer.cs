@@ -12,7 +12,7 @@ using SwapShelf.Data;
 namespace SwapShelf.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260613193735_InitialCreate")]
+    [Migration("20260614092804_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
