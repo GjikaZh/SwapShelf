@@ -57,9 +57,10 @@ The goal of SwapShelf is to make book exchanging easier by connecting users who 
 ### Testing
 
 * xUnit
-* Moq
+* NSubstitute
 * EF Core InMemory
 * Coverlet for code coverage
+* k6 for performance testing
 
 ## Architecture
 
